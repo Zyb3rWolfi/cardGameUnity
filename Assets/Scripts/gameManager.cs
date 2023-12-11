@@ -4,21 +4,30 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Windows.Speech;
 
 public class gameManager : MonoBehaviour
 {
-    public static event Action<int> executeAttack;
+    public static event Action<int, int> executeAttack;
+    public static event Action<int> destroyCard;
     public static event Action<int> enemyTurn;
-    private int cardSelectedId;
-    private static int enemyCounter = 1;
+    private cardScriptable cardSelected;
+    private static int enemyCounter = 0;
     [SerializeField] private int enemyAmount;
     static Dictionary<enemyManager, int> enemyIdMap = new Dictionary<enemyManager, int>();
-    [SerializeField] private int queueNum = 1;
-    [SerializeField] private int amount;
+    public int queueNum = 1;
 
     public static int RegisterEnemy(enemyManager enemy)
     {
+        int enemyId = enemyCounter;
+        enemyIdMap.Add(enemy, enemyId);
+        enemyCounter++;
+        return enemyId;
+    }
+    
+    public static int RestartDict(enemyManager enemy)
+    {
+        enemyCounter = 0;
+        enemyIdMap.Clear();
         int enemyId = enemyCounter;
         enemyIdMap.Add(enemy, enemyId);
         enemyCounter++;
@@ -29,56 +38,66 @@ public class gameManager : MonoBehaviour
     private int _playerHealth = 50;
     [SerializeField] private TextMeshProUGUI healthUi;
     [SerializeField] private TextMeshProUGUI energyUi;
-
-    private void Start()
-    {
-        amount = enemyIdMap.Count;
-    }
+    
 
     private void OnEnable()
     {
         cardManager.onCardSelected += CardSelected;
-        enemyManager.onEnemySelected += startAttack;
+        enemyManager.onEnemySelected += StartAttack;
         enemyManager.attackPlayer += PlayerTakeDmg;
     }
 
     private void OnDisable()
     {
         cardManager.onCardSelected -= CardSelected;
-        enemyManager.onEnemySelected -= startAttack;
+        enemyManager.onEnemySelected -= StartAttack;
         enemyManager.attackPlayer -= PlayerTakeDmg;
     }
 
-    private void CardSelected(int id)
+    private void CardSelected(cardScriptable selectedCard)
     {
-        cardSelectedId = id;
-        print("Current card selected: " + id);
-        amount = enemyIdMap.Count;
+        cardSelected = selectedCard;
+        print("Current card selected: " + selectedCard.id);
     }
 
-    private void startAttack(string enemy)
+    private void StartAttack(int enemy)
     {
         if (_energy == 0)
         {
             return;
         }
         
-        if (cardSelectedId != -1)
+        if (cardSelected.id != -1)
         {
-            _energy--;
-            energyUi.text = $"{_energy}/3";
-            executeAttack?.Invoke(10);
+            destroyCard?.Invoke(cardSelected.id);
+            if (cardSelected.energyAmount <= _energy)
+            {
+                _energy -= cardSelected.energyAmount;
+                energyUi.text = $"{_energy}/3";
+                executeAttack?.Invoke(enemy, cardSelected.damage);
+                
+            }
         }
     }
-
-    public void StartEnemyAttack()
+    
+    // Runs when end round button is clicked
+    public void HandleEndRoundClick()
     {
-        enemyTurn?.Invoke(queueNum);
-        queueNum++;
+        if (queueNum == 0)
+        {
+            enemyTurn?.Invoke(queueNum);
+            queueNum++;
+        }
+        else
+        {
+            queueNum = 0;
+            enemyTurn?.Invoke(queueNum);
+            queueNum++;
+        }
     }
-
     public void EndRound()
     {
+        print("ending round");
         _energy = 3;
         queueNum = 0;
         energyUi.text = $"{_energy}/3";
@@ -86,30 +105,17 @@ public class gameManager : MonoBehaviour
 
     private void PlayerTakeDmg(int dmg)
     {
+        _playerHealth -= dmg;
+        healthUi.text = $"{_playerHealth}/50";
+        queueNum++;
+        enemyTurn?.Invoke(queueNum);
+        
         if (queueNum == enemyIdMap.Count)
         {
             EndRound();
-            return;
         }
-        if (queueNum <= enemyIdMap.Count)
-        {
-            StartCoroutine(waitForNext(dmg));
-            
-        }
-        
-    }
 
-    private IEnumerator waitForNext(int dmg)
-    {
-        print("run this" + queueNum);
-        yield return new WaitForSeconds(1.0f);
-        print("running");
-        queueNum++;
-        enemyTurn?.Invoke(queueNum);
-        _playerHealth -= dmg;
-        healthUi.text = $"{_playerHealth}/50";
-        print("run this" + queueNum);
-    } 
+    }
 
 
 }

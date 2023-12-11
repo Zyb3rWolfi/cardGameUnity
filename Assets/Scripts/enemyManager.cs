@@ -11,8 +11,10 @@ public class enemyManager : MonoBehaviour
     [SerializeField] private int enemyDmg;
 
     [SerializeField] private int _enemyId;
-    public static event Action<string> onEnemySelected;
+    [SerializeField] private enemyScriptableClass enemyType;
+    public static event Action<int> onEnemySelected;
     public static event Action<int> attackPlayer;
+    public static event Action restartDictionary;
 
     private void Start()
     {
@@ -23,22 +25,41 @@ public class enemyManager : MonoBehaviour
     {
         gameManager.executeAttack += EnemyAttacked;
         gameManager.enemyTurn += EnemyTurn;
+        restartDictionary += RestartIdDictionary;
+        _healthText.text = $"{enemyType.health}/{enemyType.health}";
+        enemyHealth = enemyType.health;
+        enemyDmg = enemyType.dmg;
     }
     private void OnDisable()
     {
         gameManager.executeAttack -= EnemyAttacked;
         gameManager.enemyTurn -= EnemyTurn;
+        restartDictionary -= RestartIdDictionary;
+        
 
     }
     private void OnMouseDown()
     {
-        onEnemySelected?.Invoke("normal");
+        onEnemySelected?.Invoke(_enemyId);
     }
 
-    private void EnemyAttacked(int dmg)
+    private void RestartIdDictionary()
     {
-        enemyHealth -= dmg;
-        _healthText.text = $"{enemyHealth}/10";
+        _enemyId = gameManager.RestartDict(this);
+    }
+    private void EnemyAttacked(int id, int dmg)
+    {
+        if (id == _enemyId)
+        {
+            enemyHealth -= dmg;
+            _healthText.text = $"{enemyHealth}/{enemyType.health}";
+
+            if (enemyHealth <= 0)
+            {
+                Destroy(this.gameObject);
+                restartDictionary?.Invoke();
+            }
+        }
     }
 
     private void EnemyTurn(int id)
