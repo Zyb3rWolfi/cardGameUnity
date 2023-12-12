@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0a84d02855b2734aa372d01e39cffea, type: 3}
   m_Name: weakEnemy
   m_EditorClassIdentifier: 
-  name: 
-  dmg: 0
-  health: 0
+  name: Slime
+  dmg: 5
+  health: 20

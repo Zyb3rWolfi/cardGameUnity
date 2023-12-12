@@ -9,7 +9,6 @@ public class enemyManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _healthText;
     [SerializeField] private int enemyHealth;
     [SerializeField] private int enemyDmg;
-
     [SerializeField] private int _enemyId;
     [SerializeField] private enemyScriptableClass enemyType;
     public static event Action<int> onEnemySelected;

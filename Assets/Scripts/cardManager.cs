@@ -6,12 +6,13 @@ using UnityEngine;
 
 public class cardManager : MonoBehaviour
 {
-    public static event Action<cardScriptable> onCardSelected;
+    public static event Action<cardScriptable, int> onCardSelected;
     public cardScriptable cardType;
 
     [SerializeField] private TextMeshProUGUI title;
     [SerializeField] private TextMeshProUGUI description;
     [SerializeField] private TextMeshProUGUI energy;
+    private int instanceID;
 
     // Start is called before the first frame update
     void Start()
@@ -24,6 +25,7 @@ public class cardManager : MonoBehaviour
     private void OnEnable()
     {
         gameManager.destroyCard += DestroyCard;
+        instanceID = this.GetInstanceID();
     }
 
     private void OnDisable()
@@ -31,9 +33,9 @@ public class cardManager : MonoBehaviour
         gameManager.destroyCard -= DestroyCard;
     }
 
-    private void DestroyCard(int id)
+    private void DestroyCard(int id, int uniqueID)
     {
-        if (id == cardType.id)
+        if (id == cardType.id && uniqueID == instanceID)
         {
             Destroy(this.gameObject);
         }
@@ -41,6 +43,6 @@ public class cardManager : MonoBehaviour
     private void OnMouseDown()
     {
         print("Clicked");
-        onCardSelected?.Invoke(cardType);
+        onCardSelected?.Invoke(cardType, instanceID);
     }
 }

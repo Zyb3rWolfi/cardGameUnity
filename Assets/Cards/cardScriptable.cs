@@ -11,4 +11,6 @@ public class cardScriptable : ScriptableObject
     public int damage;
     public int id;
     public int energyAmount;
+    public string type = "";
+    public int defenceAmount;
 }
