@@ -21,8 +21,10 @@ public class gameManager : MonoBehaviour
     [SerializeField] private GameObject placeholder;
     [SerializeField] private float spacing;
     [SerializeField] private TextMeshProUGUI _shieldsUi;
+    [SerializeField] private enemiesspawnScriptable spawns;
         static Dictionary<enemyManager, int> enemyIdMap = new Dictionary<enemyManager, int>();
     public int queueNum = 1;
+    private IEnumerator coroutine;
 
     public static int RegisterEnemy(enemyManager enemy)
     {
@@ -45,29 +47,41 @@ public class gameManager : MonoBehaviour
 
     private int _energy = 3;
     private int _playerHealth = 50;
+    private bool roundEnded;
+    private float elapsedTime;
+    private float attackDelay;
     [SerializeField] private TextMeshProUGUI healthUi;
     [SerializeField] private TextMeshProUGUI energyUi;
-    
+    [SerializeField] private GameObject spawnArea;     
 
     private void OnEnable()
     {
         cardManager.onCardSelected += CardSelected;
         enemyManager.onEnemySelected += StartAttack;
-        enemyManager.attackPlayer += PlayerTakeDmg;
+        //enemyManager.attackPlayer += AttackCooldown;
     }
 
     private void OnDisable()
     {
         cardManager.onCardSelected -= CardSelected;
         enemyManager.onEnemySelected -= StartAttack;
-        enemyManager.attackPlayer -= PlayerTakeDmg;
+        //enemyManager.attackPlayer -= AttackCooldown;
     }
 
     private void Start()
     {
+        for (int i = 0; i < spawns.enemies.Count; i++) {
+            float posx = i * 0.2f;
+            GameObject enemy = Instantiate(spawns.enemyPrefab[i], Vector3.zero, Quaternion.identity);
+            enemyManager manager = enemy.GetComponent<enemyManager>();
+            manager.enemyType = spawns.enemies[i];
+            enemy.transform.parent = spawnArea.transform;
+            enemy.transform.localPosition = new Vector3(posx, 0, 0);
+        }
         discardPile.discardedCards.Clear();
         PopulateGrid();
     }
+
 
     private void CardSelected(cardScriptable selectedCard, int id)
     {
@@ -85,6 +99,9 @@ public class gameManager : MonoBehaviour
     }
     private void PopulateGrid()
     {
+        while (placeholder.transform.childCount > 0) {
+            DestroyImmediate(placeholder.transform.GetChild(0).gameObject);
+        }
         for (int i = 0; i < currentPile.discardedCards.Count; i++)
         {
             float posx = i * spacing;
@@ -125,7 +142,11 @@ public class gameManager : MonoBehaviour
                         executeAttack?.Invoke(enemy, cardSelected.damage); 
                         discardPile.discardedCards.Add(cardSelected);
                         destroyCard?.Invoke(cardSelected.id, cardID);
-                        
+                        for (int i = 0; i < currentPile.discardedCards.Count; i++) {
+                            if (currentPile.discardedCards[i].id == cardSelected.id) {
+                                currentPile.discardedCards.RemoveAt(i);
+                            }
+                        }
                     }
                 }
 
@@ -139,15 +160,33 @@ public class gameManager : MonoBehaviour
     {
         if (queueNum == 0)
         {
-            enemyTurn?.Invoke(queueNum);
-            queueNum++;
+            StartCoroutine(takeDamage());
         }
-        else
-        {
-            queueNum = 0;
-            enemyTurn?.Invoke(queueNum);
-            queueNum++;
+
+    }
+    IEnumerator takeDamage() {
+        foreach(var enemy in enemyIdMap.Keys) {
+            yield return new WaitForSeconds(1f);
+
+            _shield -= enemy.enemyDmg;
+            
+            if (_shield < 0) {
+                _shieldsUi.text = $"0";
+            
+            } else {
+                _shieldsUi.text = $"{_shield}";
+            }
+
+            _playerHealth += _shield;
+            healthUi.text = $"{_playerHealth}/50";
+            
+            yield return new WaitForSeconds(1f);
+            if (_shield < 0) {
+                _shield = 0;
+            }
         }
+        EndRound();
+
     }
     public void EndRound()
     {
@@ -158,27 +197,38 @@ public class gameManager : MonoBehaviour
         _shieldsUi.text = $"{_shield}";
         energyUi.text = $"{_energy}/3";
         
+
+        List<cardScriptable> cards = new List<cardScriptable>();
+        
+        for (int i = 0; i < currentPile.discardedCards.Count; i++)
+        {
+            cardScriptable card = currentPile.discardedCards[i];
+            cards.Add(card);
+        }      
+
         currentPile.discardedCards.Clear();
         
         for (int i = 0; i < discardPile.discardedCards.Count; i++)
         {
-            print(i);
             cardScriptable card = discardPile.discardedCards[i];
             currentPile.discardedCards.Add(card);
             
         }
-        
+
+        for (int i = 0; i < cards.Count; i++)
+        {
+            cardScriptable card = cards[i];
+            currentPile.discardedCards.Add(card);
+                    
+        }
+
         discardPile.discardedCards.Clear();
         PopulateGrid();
-    }
+    } 
 
     private void PlayerTakeDmg(int dmg)
     {
-        _shield -= dmg;
-        _playerHealth += _shield;
-        healthUi.text = $"{_playerHealth}/50";
-        queueNum++;
-        enemyTurn?.Invoke(queueNum);
+        
         
         if (queueNum == enemyIdMap.Count)
         {
@@ -186,6 +236,4 @@ public class gameManager : MonoBehaviour
         }
 
     }
-
-
 }

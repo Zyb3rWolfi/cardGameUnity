@@ -8,9 +8,9 @@ public class enemyManager : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _healthText;
     [SerializeField] private int enemyHealth;
-    [SerializeField] private int enemyDmg;
+    [SerializeField] public int enemyDmg;
     [SerializeField] private int _enemyId;
-    [SerializeField] private enemyScriptableClass enemyType;
+    [SerializeField] public enemyScriptableClass enemyType;
     public static event Action<int> onEnemySelected;
     public static event Action<int> attackPlayer;
     public static event Action restartDictionary;
