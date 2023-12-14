@@ -22,7 +22,9 @@ public class gameManager : MonoBehaviour
     [SerializeField] private float spacing;
     [SerializeField] private TextMeshProUGUI _shieldsUi;
     [SerializeField] private enemiesspawnScriptable spawns;
-        static Dictionary<enemyManager, int> enemyIdMap = new Dictionary<enemyManager, int>();
+    [SerializeField] private discardPileScriptable savedCards;
+    
+    static Dictionary<enemyManager, int> enemyIdMap = new Dictionary<enemyManager, int>();
     public int queueNum = 1;
     private IEnumerator coroutine;
 
@@ -70,14 +72,7 @@ public class gameManager : MonoBehaviour
 
     private void Start()
     {
-        for (int i = 0; i < spawns.enemies.Count; i++) {
-            float posx = i * 0.2f;
-            GameObject enemy = Instantiate(spawns.enemyPrefab[i], Vector3.zero, Quaternion.identity);
-            enemyManager manager = enemy.GetComponent<enemyManager>();
-            manager.enemyType = spawns.enemies[i];
-            enemy.transform.parent = spawnArea.transform;
-            enemy.transform.localPosition = new Vector3(posx, 0, 0);
-        }
+        currentPile.discardedCards = savedCards.discardedCards;
         discardPile.discardedCards.Clear();
         PopulateGrid();
     }

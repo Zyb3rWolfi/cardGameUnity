@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d4fb72142ad36648944771924b541f8, type: 3}
   m_Name: AttackCard
   m_EditorClassIdentifier: 
-  cardName: Bussy Blaster
+  cardName: Attack Card
   description: Does 5dmg
   damage: 5
-  id: 1
+  id: 0
   energyAmount: 2
+  type: attack
+  defenceAmount: 0

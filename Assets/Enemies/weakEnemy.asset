@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: weakEnemy
   m_EditorClassIdentifier: 
   name: Slime
-  dmg: 5
+  dmg: 10
   health: 20

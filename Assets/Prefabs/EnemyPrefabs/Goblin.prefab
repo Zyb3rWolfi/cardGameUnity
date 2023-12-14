@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 215722564982401361}
   - component: {fileID: 2783254627441247176}
   m_Layer: 0
-  m_Name: Enemy
+  m_Name: Goblin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -103,7 +103,7 @@ MonoBehaviour:
   enemyHealth: 10
   enemyDmg: 5
   _enemyId: 0
-  enemyType: {fileID: 0}
+  enemyType: {fileID: 11400000, guid: 3d869df9ec34d4c438d4835b711ddb0e, type: 2}
 --- !u!61 &2783254627441247176
 BoxCollider2D:
   m_ObjectHideFlags: 0
